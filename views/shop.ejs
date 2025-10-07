@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - ATC AfriGlam</title>
+    <link rel="stylesheet" href="styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <%- include('./partials/nav.ejs') %>
+
+    <!-- Shop Section -->
+    <section class="shop">
+        <div class="container">
+            <h1 class="section-title">Shop Our Collection</h1>
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be dynamically inserted here -->
+            </div>
+            <div id="no-products-message" style="display: none;">
+                <p>No products available. Please check back later.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter">
+        <div class="container">
+            <h2 class="section-title">Stay Connected</h2>
+            <p class="newsletter-subtitle">Subscribe to our newsletter for exclusive updates, promotions, and fashion
+                tips!</p>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Your email address" required>
+                <button type="submit" class="cta-button">Subscribe</button>
+            </form>
+            <p class="newsletter-disclaimer">*We respect your privacy. Unsubscribe at any time.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

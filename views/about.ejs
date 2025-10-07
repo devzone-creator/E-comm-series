@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - ATC AfriGlam</title>
+    <link rel="stylesheet" href="styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <%- include('./partials/nav.ejs') %>
+
+    <!-- About Section -->
+    <section class="about">
+        <div class="container">
+            <h1 class="section-title">About ATC AfriGlam</h1>
+            <div class="about-content">
+                <div class="about-image">
+                    <img src="https://placehold.co/800x600" alt="African artisans creating traditional fabrics">
+                </div>
+                <div class="about-text">
+                    <h2>Our Mission</h2>
+                    <p>At ATC AfriGlam, we are dedicated to celebrating the rich heritage of African fashion. Our
+                        mission is to provide authentic, high-quality apparel and accessories that reflect the vibrant
+                        cultures and traditions of Africa.</p>
+
+                    <h2>Our Story</h2>
+                    <p>Founded by a group of passionate artisans and fashion enthusiasts, ATC AfriGlam was born from a
+                        desire to share the beauty of African craftsmanship with the world. Each piece in our collection
+                        tells a unique story, blending traditional techniques with contemporary design.</p>
+
+                    <h2>Why Choose Us?</h2>
+                    <div class="icon-list">
+                        <div class="icon-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m-3-3H9m3-4a4 4 0 100 8 4 4 0 000-8z" />
+                            </svg>
+                            <p>Ethical Fashion</p>
+                        </div>
+                        <div class="icon-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3h18v18H3V3z" />
+                            </svg>
+                            <p>Quality Craftsmanship</p>
+                        </div>
+                        <div class="icon-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            <p>Community Support</p>
+                        </div>
+                    </div>
+
+                    <h2>Our Values</h2>
+                    <p>We value authenticity, quality, and sustainability. Our products are crafted with care, ensuring
+                        that each item is not only beautiful but also made to last. We are committed to transparency in
+                        our sourcing and production processes, allowing our customers to feel good about their
+                        purchases.</p>
+
+                    <h2>Join Us on Our Journey</h2>
+                    <p>We invite you to explore our collections and discover the stories behind each piece. By choosing
+                        ATC AfriGlam, you are joining a community that celebrates diversity, creativity, and the rich
+                        tapestry of African culture.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Newsletter Section -->
+    <section class="newsletter">
+        <div class="container">
+            <h2 class="section-title">Stay Connected</h2>
+            <p class="newsletter-subtitle">Subscribe to our newsletter for exclusive updates, promotions, and fashion
+                tips!</p>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Your email address" required>
+                <button type="submit" class="cta-button">Subscribe</button>
+            </form>
+            <p class="newsletter-disclaimer">*We respect your privacy. Unsubscribe at any time.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script src="script.js">
+    </script>
+</body>
+
+</html>
