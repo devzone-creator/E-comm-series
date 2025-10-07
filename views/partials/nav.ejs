@@ -2,7 +2,7 @@
     <header class="header">
         <div class="container">
             <div class="logo-wrapper">
-                <a href="musti.html" class="logo">ATC AfriGlam</a>
+                <a href="/" class="logo">ATC AfriGlam</a>
             </div>
             <nav class="main-nav">
                 <a href="/" class="nav-link">Home</a>
@@ -11,18 +11,66 @@
                 <a href="#faq" class="nav-link">FAQs</a>
                 <a href="#contact" class="nav-link">Contact Us</a>
             </nav>
-            <div class="cart-icon-wrapper">
-                <a href="cartPage.html" class="cart-icon-link">
-                    <!-- Cart Icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" class="cart-icon">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 3h2l.4 2M7 13h10l1.5-7H6.5L5 3H1M7 13l-1 5a2 2 0 002 2h10a2 2 0 002-2l-1-5M7 13h10" />
-                    </svg>
-                </a>
+            <div class="header-actions">
+                <div class="cart-icon-wrapper">
+                    <a href="/cart" class="cart-icon-link">
+                        <!-- Cart Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" class="cart-icon">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l1.5-7H6.5L5 3H1M7 13l-1 5a2 2 0 002 2h10a2 2 0 002-2l-1-5M7 13h10" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="auth-links">
+                    <% if (typeof user !== 'undefined' && user) { %>
+                        <a href="/dashboard" class="nav-link auth-link">Dashboard</a>
+                        <a href="/logout" class="nav-link auth-link logout">Logout</a>
+                    <% } else { %>
+                        <a href="/login" class="nav-link auth-link">Login</a>
+                        <a href="/register" class="nav-link auth-link register">Register</a>
+                    <% } %>
+                </div>
             </div>
             <button class="mobile-menu-btn">
                 <i class="fas fa-bars menu-icon"></i> <!-- Font Awesome hamburger icon -->
             </button>
         </div>
     </header>
+
+    <style>
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .auth-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .auth-link {
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .auth-link.register {
+            background: #667eea;
+            color: white;
+        }
+        .auth-link.register:hover {
+            background: #5a6fd8;
+        }
+        .auth-link.logout {
+            background: #dc3545;
+            color: white;
+        }
+        .auth-link.logout:hover {
+            background: #c82333;
+        }
+        @media (max-width: 768px) {
+            .header-actions {
+                display: none;
+            }
+        }
+    </style>
