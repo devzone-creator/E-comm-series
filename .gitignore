@@ -3,5 +3,7 @@ tests
 .env
 node_modules
 
+jest.config.js
+
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
