@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('./partials/head.ejs') %>
+    <style>
+        .shop-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .shop-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .shop-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .shop-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .filter-group label {
+            font-weight: 500;
+            color: #666;
+        }
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+        .search-input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 250px;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .product-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        .product-image-placeholder {
+            width: 100%;
+            height: 250px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .product-info {
+            padding: 1.5rem;
+        }
+        .product-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .product-category {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .product-stock {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .stock-good {
+            color: #28a745;
+        }
+        .stock-low {
+            color: #ffc107;
+        }
+        .stock-out {
+            color: #dc3545;
+        }
+        .product-variants {
+            margin-bottom: 1rem;
+        }
+        .variant-group {
+            margin-bottom: 0.5rem;
+        }
+        .variant-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        .variant-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.875rem;
+        }
+        .add-to-cart-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .quantity-input {
+            width: 60px;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .add-to-cart-btn {
+            flex: 1;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .add-to-cart-btn:hover {
+            background: #218838;
+        }
+        .add-to-cart-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .view-details-btn {
+            flex: 1;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .view-details-btn:hover {
+            background: #5a67d8;
+            color: white;
+            text-decoration: none;
+        }
+        .no-products {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        .pagination a,
+        .pagination span {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination a:hover {
+            background: #f8f9fa;
+        }
+        .pagination .current {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('./partials/nav.ejs') %>
+
+    <div class="shop-container">
+        <div class="shop-header">
+            <h1>Shop Our Collection</h1>
+            <p>Discover authentic African fashion and accessories</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="shop-filters">
+            <div class="filter-group">
+                <label for="search">Search:</label>
+                <input type="text" id="search" class="search-input" placeholder="Search products...">
+            </div>
+            <div class="filter-group">
+                <label for="category">Category:</label>
+                <select id="category" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="sort">Sort by:</label>
+                <select id="sort" class="filter-select">
+                    <option value="created_at-DESC">Newest First</option>
+                    <option value="created_at-ASC">Oldest First</option>
+                    <option value="price-ASC">Price: Low to High</option>
+                    <option value="price-DESC">Price: High to Low</option>
+                    <option value="name-ASC">Name: A to Z</option>
+                    <option value="name-DESC">Name: Z to A</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="messages"></div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="products-grid">
+            <div class="loading">Loading products...</div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination"></div>
+    </div></div></select>label>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter">
+        <div class="container">
+            <h2 class="section-title">Stay Connected</h2>
+            <p class="newsletter-subtitle">Subscribe to our newsletter for exclusive updates, promotions, and fashion
+                tips!</p>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Your email address" required>
+                <button type="submit" class="cta-button">Subscribe</button>
+            </form>
+            <p class="newsletter-disclaimer">*We respect your privacy. Unsubscribe at any time.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script>
+        let currentPage = 1;
+        let currentFilters = {
+            search: '',
+            category: '',
+            sortBy: 'created_at',
+            sortOrder: 'DESC'
+        };
+
+        // Load products
+        async function loadProducts(page = 1) {
+            try {
+                const params = new URLSearchParams({
+                    page,
+                    limit: 12,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/products?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                if (!text) {
+                    throw new Error('Empty response from server');
+                }
+                
+                const data = JSON.parse(text);
+
+                if (data.success) {
+                    displayProducts(data.products);
+                    displayPagination(data.pagination);
+                } else {
+                    showError(data.message || 'Failed to load products');
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showError('Failed to load products');
+            }
+        }
+
+        // Display products
+        function displayProducts(products) {
+            const grid = document.getElementById('products-grid');
+            
+            if (products.length === 0) {
+                grid.innerHTML = '<div class="no-products"><h3>No products found</h3><p>Try adjusting your search or filters.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = products.map(product => `
+                <div class="product-card">
+                    ${product.image_url 
+                        ? `<img src="${product.image_url}" alt="${product.name}" class="product-image">`
+                        : `<div class="product-image-placeholder">No Image</div>`
+                    }
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-category">${product.category_name || 'Uncategorized'}</div>
+                        <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                        
+                        <div class="product-stock">
+                            ${product.stock_quantity > 10 
+                                ? `<span class="stock-good">In Stock (${product.stock_quantity})</span>`
+                                : product.stock_quantity > 0
+                                ? `<span class="stock-low">Low Stock (${product.stock_quantity})</span>`
+                                : `<span class="stock-out">Out of Stock</span>`
+                            }
+                        </div>
+
+                        ${product.stock_quantity > 0 ? `
+                            <div class="product-variants">
+                                ${product.sizes && product.sizes !== 'null' && product.sizes !== '' ? `
+                                    <div class="variant-group">
+                                        <label class="variant-label">Size:</label>
+                                        <select class="variant-select" id="size-${product.id}">
+                                            <option value="">Select Size</option>
+                                            ${(() => {
+                                                try {
+                                                    const sizes = typeof product.sizes === 'string' ? JSON.parse(product.sizes) : product.sizes;
+                                                    return Array.isArray(sizes) ? sizes.map(size => 
+                                                        `<option value="${size}">${size}</option>`
+                                                    ).join('') : '';
+                                                } catch (e) {
+                                                    return '';
+                                                }
+                                            })()}
+                                        </select>
+                                    </div>
+                                ` : ''}
+                                
+                                ${product.colors && product.colors !== 'null' && product.colors !== '' ? `
+                                    <div class="variant-group">
+                                        <label class="variant-label">Color:</label>
+                                        <select class="variant-select" id="color-${product.id}">
+                                            <option value="">Select Color</option>
+                                            ${(() => {
+                                                try {
+                                                    const colors = typeof product.colors === 'string' ? JSON.parse(product.colors) : product.colors;
+                                                    return Array.isArray(colors) ? colors.map(color => 
+                                                        `<option value="${color}">${color}</option>`
+                                                    ).join('') : '';
+                                                } catch (e) {
+                                                    return '';
+                                                }
+                                            })()}
+                                        </select>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="add-to-cart-form">
+                                <input type="number" class="quantity-input" id="quantity-${product.id}" value="1" min="1" max="${product.stock_quantity}">
+                                <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        ` : `
+                            <button class="add-to-cart-btn" disabled>Out of Stock</button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Display pagination
+        function displayPagination(pagination) {
+            const paginationDiv = document.getElementById('pagination');
+            
+            if (pagination.pages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '<div class="pagination">';
+            
+            if (pagination.page > 1) {
+                paginationHTML += `<a href="#" onclick="changePage(${pagination.page - 1})">Previous</a>`;
+            }
+            
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    paginationHTML += `<span class="current">${i}</span>`;
+                } else {
+                    paginationHTML += `<a href="#" onclick="changePage(${i})">${i}</a>`;
+                }
+            }
+            
+            if (pagination.page < pagination.pages) {
+                paginationHTML += `<a href="#" onclick="changePage(${pagination.page + 1})">Next</a>`;
+            }
+            
+            paginationHTML += '</div>';
+            paginationDiv.innerHTML = paginationHTML;
+        }
+
+        // Change page
+        function changePage(page) {
+            currentPage = page;
+            loadProducts(page);
+        }
+
+        // Quick add to cart (from shop page)
+        async function quickAddToCart(productId, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            try {
+                const response = await fetch('/api/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        productId,
+                        quantity: 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('Item added to cart! Redirecting to cart...');
+                    updateCartCount();
+                    // Redirect to cart after 1 second
+                    setTimeout(() => {
+                        window.location.href = '/cart';
+                    }, 1000);
+                } else {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                    } else {
+                        showError(data.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showError('Failed to add item to cart');
+            }
+        }
+
+        // Add to cart
+        async function addToCart(productId) {
+            try {
+                const quantity = parseInt(document.getElementById(`quantity-${productId}`).value);
+                const sizeSelect = document.getElementById(`size-${productId}`);
+                const colorSelect = document.getElementById(`color-${productId}`);
+                
+                const size = sizeSelect ? sizeSelect.value : null;
+                const color = colorSelect ? colorSelect.value : null;
+
+                const response = await fetch('/api/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        productId,
+                        quantity,
+                        size,
+                        color
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('Item added to cart successfully!');
+                    updateCartCount();
+                } else {
+                    if (response.status === 401) {
+                        // User not logged in, redirect to login
+                        window.location.href = '/login';
+                    } else {
+                        showError(data.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                // Fallback to form submission for non-API users
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/cart/add';
+                
+                const inputs = [
+                    { name: 'productId', value: productId },
+                    { name: 'quantity', value: document.getElementById(`quantity-${productId}`).value },
+                    { name: 'redirect', value: '/shop' }
+                ];
+
+                const sizeSelect = document.getElementById(`size-${productId}`);
+                const colorSelect = document.getElementById(`color-${productId}`);
+                
+                if (sizeSelect && sizeSelect.value) {
+                    inputs.push({ name: 'size', value: sizeSelect.value });
+                }
+                if (colorSelect && colorSelect.value) {
+                    inputs.push({ name: 'color', value: colorSelect.value });
+                }
+
+                inputs.forEach(input => {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = input.name;
+                    hiddenInput.value = input.value;
+                    form.appendChild(hiddenInput);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Update cart count in navigation
+        async function updateCartCount() {
+            try {
+                const response = await fetch('/api/cart/count');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update cart count in navigation if element exists
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement) {
+                        cartCountElement.textContent = data.count;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating cart count:', error);
+            }
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="alert alert-success">${message}</div>`;
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Show error message
+        function showError(message) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="alert alert-error">${message}</div>`;
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const categorySelect = document.getElementById('category');
+                    
+                    data.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.name;
+                        option.textContent = cat.name;
+                        categorySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                // Fallback to default categories
+                const categorySelect = document.getElementById('category');
+                const defaultCategories = ['Dresses', 'Accessories', 'Shirts', 'Skirts', 'Jewelry', 'Blazers', 'Bags', 'Pants'];
+                defaultCategories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+
+        // Filter event listeners
+        document.getElementById('search').addEventListener('input', (e) => {
+            currentFilters.search = e.target.value;
+            currentPage = 1;
+            loadProducts(1);
+        });
+
+        document.getElementById('category').addEventListener('change', (e) => {
+            currentFilters.category = e.target.value;
+            currentPage = 1;
+            loadProducts(1);
+        });
+
+        document.getElementById('sort').addEventListener('change', (e) => {
+            const [sortBy, sortOrder] = e.target.value.split('-');
+            currentFilters.sortBy = sortBy;
+            currentFilters.sortOrder = sortOrder;
+            currentPage = 1;
+            loadProducts(1);
+        });
+
+        // Handle URL parameters for messages
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+        
+        if (success) {
+            showSuccess(success);
+            // Clean URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+        }
+        if (error) {
+            showError(error);
+            // Clean URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            loadProducts(1);
+            updateCartCount();
+        });
+    </script>
+
+    <%- include('./partials/footer.ejs') %>
+</body>
+
+</html>

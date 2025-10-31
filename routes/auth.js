@@ -1,185 +1,138 @@
 import express from 'express';
+import { validationResult } from 'express-validator';
 import AuthService from '../services/authService.js';
 import { 
   validateRegistration, 
   validateLogin, 
   validateProfileUpdate, 
-  validatePasswordChange
+  validatePasswordChange,
+  validatePasswordReset,
+  validatePasswordResetConfirm,
+  handleValidationErrors
 } from '../utils/validation.js';
 import { 
-  authenticateToken, 
+  unifiedAuthenticate, 
   authenticateSession, 
-  redirectIfAuthenticated 
+  redirectIfAuthenticated,
+  regenerateSession,
+  checkSessionTimeout
 } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 
 // API Routes (JSON responses)
 
 // POST /api/auth/register
-router.post('/api/auth/register', async (req, res) => {
-  try {
-    const validation = validateRegistration(req.body);
-    
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: validation.errors
-      });
-    }
-
-    const result = await AuthService.register(req.body);
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+router.post('/api/auth/register', validateRegistration, handleValidationErrors, asyncHandler(async (req, res) => {
+  const result = await AuthService.register(req.body);
+  res.status(201).json(result);
+}));
 
 // POST /api/auth/login
-router.post('/api/auth/login', async (req, res) => {
-  try {
-    const validation = validateLogin(req.body);
-    
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: validation.errors
-      });
-    }
+router.post('/api/auth/login', validateLogin, handleValidationErrors, asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const result = await AuthService.login(email, password);
+  res.json(result);
+}));
 
-    const { email, password } = req.body;
-    const result = await AuthService.login(email, password);
-    res.json(result);
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-// GET /api/auth/profile
-router.get('/api/auth/profile', authenticateToken, async (req, res) => {
-  try {
-    const result = await AuthService.getProfile(req.user.id);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-// PUT /api/auth/profile
-router.put('/api/auth/profile', authenticateToken, async (req, res) => {
-  try {
-    const validation = validateProfileUpdate(req.body);
-    
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: validation.errors
-      });
-    }
-
-    const result = await AuthService.updateProfile(req.user.id, req.body);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-// POST /api/auth/change-password
-router.post('/api/auth/change-password', authenticateToken, async (req, res) => {
-  try {
-    const validation = validatePasswordChange(req.body);
-    
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: validation.errors
-      });
-    }
-
-    const { currentPassword, newPassword } = req.body;
-    const result = await AuthService.changePassword(req.user.id, currentPassword, newPassword);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+// POST /api/auth/refresh-token
+router.post('/api/auth/refresh-token', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+  const result = await AuthService.refreshAccessToken(refreshToken);
+  res.json(result);
+}));
 
 // POST /api/auth/logout
-router.post('/api/auth/logout', (req, res) => {
-  // For JWT, logout is handled client-side by removing the token
-  res.json({
-    success: true,
-    message: 'Logged out successfully'
-  });
-});
+router.post('/api/auth/logout', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+  await AuthService.logout(refreshToken);
+  res.json({ success: true, message: 'Logged out successfully' });
+}));
+
+// GET /api/auth/profile
+router.get('/api/auth/profile', unifiedAuthenticate, asyncHandler(async (req, res) => {
+  const result = await AuthService.getProfile(req.user.id);
+  res.json(result);
+}));
+
+// PUT /api/auth/profile
+router.put('/api/auth/profile', unifiedAuthenticate, validateProfileUpdate, handleValidationErrors, asyncHandler(async (req, res) => {
+  const result = await AuthService.updateProfile(req.user.id, req.body);
+  res.json(result);
+}));
+
+// POST /api/auth/change-password
+router.post('/api/auth/change-password', unifiedAuthenticate, validatePasswordChange, handleValidationErrors, asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const result = await AuthService.changePassword(req.user.id, currentPassword, newPassword);
+  res.json(result);
+}));
+
+// POST /api/auth/forgot-password
+router.post('/api/auth/forgot-password', validatePasswordReset, handleValidationErrors, asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const result = await AuthService.requestPasswordReset(email);
+  res.json(result);
+}));
+
+// POST /api/auth/reset-password
+router.post('/api/auth/reset-password', validatePasswordResetConfirm, handleValidationErrors, asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+  const result = await AuthService.resetPassword(token, newPassword);
+  res.json(result);
+}));
 
 // Web Routes (HTML responses)
 
 // GET /login
 router.get('/login', redirectIfAuthenticated, (req, res) => {
+  const redirectUrl = req.query.redirect || '';
   res.render('auth/login', { 
     title: 'Login - AfriGlam',
     error: null,
     errors: {},
-    formData: {}
+    formData: {},
+    redirectUrl
   });
 });
 
 // POST /login
-router.post('/login', redirectIfAuthenticated, async (req, res) => {
-  try {
-    const validation = validateLogin(req.body);
-    
-    if (!validation.isValid) {
-      return res.render('auth/login', {
-        title: 'Login - AfriGlam',
-        error: 'Please fix the errors below',
-        errors: validation.errors,
-        formData: req.body
-      });
-    }
+router.post('/login', redirectIfAuthenticated, validateLogin, regenerateSession, asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('auth/login', {
+      title: 'Login - AfriGlam',
+      error: 'Please fix the errors below',
+      errors: errors.mapped(),
+      formData: req.body
+    });
+  }
 
-    const { email, password } = req.body;
-    const result = await AuthService.login(email, password);
-    
-    // Set session
-    req.session.userId = result.user.id;
-    req.session.userRole = result.user.role;
-    
-    // Redirect based on role
+  const { email, password } = req.body;
+  const result = await AuthService.login(email, password);
+  
+  // Set session with security measures
+  req.session.userId = result.user.id;
+  req.session.userRole = result.user.role;
+  req.session.lastActivity = Date.now();
+  req.session.loginTime = Date.now();
+  
+  // Check for redirect URL
+  const redirectUrl = req.body.redirectUrl || req.query.redirect;
+  
+  if (redirectUrl && redirectUrl.startsWith('/')) {
+    // Redirect back to the original page
+    res.redirect(redirectUrl);
+  } else {
+    // Default redirect based on role
     if (result.user.role === 'admin') {
       res.redirect('/admin/dashboard');
     } else {
       res.redirect('/dashboard');
     }
-  } catch (error) {
-    res.render('auth/login', {
-      title: 'Login - AfriGlam',
-      error: error.message,
-      errors: {},
-      formData: req.body
-    });
   }
-});
+}));
 
 // GET /register
 router.get('/register', redirectIfAuthenticated, (req, res) => {
@@ -192,58 +145,55 @@ router.get('/register', redirectIfAuthenticated, (req, res) => {
 });
 
 // POST /register
-router.post('/register', redirectIfAuthenticated, async (req, res) => {
-  try {
-    const validation = validateRegistration(req.body);
-    
-    if (!validation.isValid) {
-      return res.render('auth/register', {
-        title: 'Register - AfriGlam',
-        error: 'Please fix the errors below',
-        errors: validation.errors,
-        formData: req.body
-      });
-    }
-
-    const result = await AuthService.register(req.body);
-    
-    // Set session
-    req.session.userId = result.user.id;
-    req.session.userRole = result.user.role;
-    
-    res.redirect('/dashboard');
-  } catch (error) {
-    res.render('auth/register', {
+router.post('/register', redirectIfAuthenticated, validateRegistration, asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('auth/register', {
       title: 'Register - AfriGlam',
-      error: error.message,
-      errors: {},
+      error: 'Please fix the errors below',
+      errors: errors.mapped(),
       formData: req.body
     });
   }
-});
+
+  const result = await AuthService.register(req.body);
+  
+  res.render('auth/login', {
+    title: 'Login - AfriGlam',
+    error: null,
+    errors: {},
+    formData: {},
+    success: result.message,
+  });
+}));
+
+// GET /verify-email
+router.get('/verify-email', asyncHandler(async (req, res) => {
+  const { token } = req.query;
+  const result = await AuthService.verifyEmail(token);
+  // Redirect to login page with a success message
+  res.redirect('/login?success=' + encodeURIComponent(result.message));
+}));
 
 // GET /logout
-router.get('/logout', (req, res) => {
+router.get('/logout', (req, res, next) => {
   req.session.destroy((err) => {
     if (err) {
-      console.error('Session destroy error:', err);
+      console.error('❌ Session destroy error:', err);
+      return next(err);
     }
-    res.redirect('/');
+    console.log('✅ User logged out successfully');
+    res.redirect('/?message=You have been logged out successfully');
   });
 });
 
 // GET /dashboard
-router.get('/dashboard', authenticateSession, async (req, res) => {
-  try {
-    const result = await AuthService.getProfile(req.session.userId);
-    res.render('dashboard/index', {
-      title: 'Dashboard - AfriGlam',
-      user: result.user
-    });
-  } catch (error) {
-    console.error('Dashboard error:', error);
-    res.redirect('/login');
-  }
-});
+router.get('/dashboard', authenticateSession, asyncHandler(async (req, res) => {
+  const result = await AuthService.getProfile(req.session.userId);
+  res.render('dashboard/index', {
+    title: 'Dashboard - AfriGlam',
+    user: result.user
+  });
+}));
 
 export default router;

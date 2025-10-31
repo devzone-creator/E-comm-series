@@ -20,6 +20,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 3h2l.4 2M7 13h10l1.5-7H6.5L5 3H1M7 13l-1 5a2 2 0 002 2h10a2 2 0 002-2l-1-5M7 13h10" />
                         </svg>
+                        <span class="cart-count" id="cart-count">0</span>
                     </a>
                 </div>
                 <div class="auth-links">
@@ -67,6 +68,28 @@
         }
         .auth-link.logout:hover {
             background: #c82333;
+        }
+        .cart-icon-wrapper {
+            position: relative;
+        }
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .cart-count:empty,
+        .cart-count[data-count="0"] {
+            display: none;
         }
         @media (max-width: 768px) {
             .header-actions {

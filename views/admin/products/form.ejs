@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../../partials/head') %>
+        <style>
+            .admin-container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .admin-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 2rem;
+                border-radius: 10px;
+                margin-bottom: 2rem;
+            }
+
+            .admin-header h1 {
+                margin: 0 0 0.5rem 0;
+            }
+
+            .admin-header p {
+                margin: 0;
+                opacity: 0.9;
+            }
+
+            .form-container {
+                background: white;
+                padding: 2rem;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .form-row {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+                flex: 1;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-weight: 500;
+                color: #333;
+            }
+
+            .form-control {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 1rem;
+                transition: border-color 0.3s;
+                box-sizing: border-box;
+            }
+
+            .form-control:focus {
+                outline: none;
+                border-color: #667eea;
+                box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            }
+
+            .form-control.is-invalid {
+                border-color: #dc3545;
+            }
+
+            .invalid-feedback {
+                color: #dc3545;
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+
+            textarea.form-control {
+                min-height: 100px;
+                resize: vertical;
+            }
+
+            .btn {
+                display: inline-block;
+                padding: 0.75rem 1.5rem;
+                background: #667eea;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                font-size: 1rem;
+            }
+
+            .btn:hover {
+                background: #5a6fd8;
+            }
+
+            .btn-secondary {
+                background: #6c757d;
+            }
+
+            .btn-secondary:hover {
+                background: #5a6268;
+            }
+
+            .form-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 2rem;
+                padding-top: 2rem;
+                border-top: 1px solid #eee;
+            }
+
+            .alert {
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 5px;
+            }
+
+            .alert-danger {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+
+            .array-input {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .array-item {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+            }
+
+            .array-item input {
+                flex: 1;
+            }
+
+            .btn-remove {
+                background: #dc3545;
+                color: white;
+                border: none;
+                padding: 0.5rem;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+
+            .btn-add {
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 3px;
+                cursor: pointer;
+                margin-top: 0.5rem;
+            }
+
+            .help-text {
+                font-size: 0.875rem;
+                color: #666;
+                margin-top: 0.25rem;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>
+                <%= product ? 'Edit Product' : 'Add New Product' %>
+            </h1>
+            <p>
+                <%= product ? 'Update product information' : 'Add a new product to your catalog' %>
+            </p>
+        </div>
+
+        <div class="form-container">
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <%= error %>
+                </div>
+                <% } %>
+
+                    <form method="POST" enctype="multipart/form-data"
+                        action="<%= product ? `/admin/products/${product.id}/edit` : '/admin/products/new' %>">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Product Name *</label>
+                                <input type="text" id="name" name="name"
+                                    class="form-control <%= errors.name ? 'is-invalid' : '' %>"
+                                    value="<%= formData.name || '' %>" required>
+                                <% if (errors.name) { %>
+                                    <div class="invalid-feedback">
+                                        <%= errors.name %>
+                                    </div>
+                                    <% } %>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="sku">SKU</label>
+                                <input type="text" id="sku" name="sku"
+                                    class="form-control <%= errors.sku ? 'is-invalid' : '' %>"
+                                    value="<%= formData.sku || '' %>" placeholder="e.g., KD001">
+                                <div class="help-text">Unique product identifier</div>
+                                <% if (errors.sku) { %>
+                                    <div class="invalid-feedback">
+                                        <%= errors.sku %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description"
+                                class="form-control <%= errors.description ? 'is-invalid' : '' %>"
+                                placeholder="Describe your product..."><%= formData.description || '' %></textarea>
+                            <% if (errors.description) { %>
+                                <div class="invalid-feedback">
+                                    <%= errors.description %>
+                                </div>
+                                <% } %>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="price">Price ($) *</label>
+                                <input type="number" id="price" name="price"
+                                    class="form-control <%= errors.price ? 'is-invalid' : '' %>"
+                                    value="<%= formData.price || '' %>" step="0.01" min="0" required>
+                                <% if (errors.price) { %>
+                                    <div class="invalid-feedback">
+                                        <%= errors.price %>
+                                    </div>
+                                    <% } %>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="categoryId">Category *</label>
+                                <select id="categoryId" name="categoryId"
+                                    class="form-control <%= errors.categoryId ? 'is-invalid' : '' %>" required>
+                                    <option value="">Select a category</option>
+                                    <% categories.forEach(category=> { %>
+                                        <option value="<%= category.id %>" <%=(formData.categoryId ||
+                                            formData.category_id)===category.id ? 'selected' : '' %>
+                                            >
+                                            <%= category.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+                                <% if (errors.categoryId) { %>
+                                    <div class="invalid-feedback">
+                                        <%= errors.categoryId %>
+                                    </div>
+                                    <% } %>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stockQuantity">Stock Quantity</label>
+                                <input type="number" id="stockQuantity" name="stockQuantity"
+                                    class="form-control <%= errors.stockQuantity ? 'is-invalid' : '' %>"
+                                    value="<%= formData.stockQuantity || formData.stock_quantity || 0 %>" min="0">
+                                <% if (errors.stockQuantity) { %>
+                                    <div class="invalid-feedback">
+                                        <%= errors.stockQuantity %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imageUrl">Main Image URL</label>
+                            <input type="url" id="imageUrl" name="imageUrl"
+                                class="form-control <%= errors.imageUrl ? 'is-invalid' : '' %>"
+                                value="<%= formData.imageUrl || formData.image_url || '' %>"
+                                placeholder="https://example.com/image.jpg">
+                            <div class="help-text">URL to the main product image</div>
+                            <% if (errors.imageUrl) { %>
+                                <div class="invalid-feedback">
+                                    <%= errors.imageUrl %>
+                                </div>
+                                <% } %>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Available Sizes</label>
+                                <div id="sizes-container" class="array-input">
+                                    <!-- Sizes will be populated by JavaScript -->
+                                </div>
+                                <button type="button" class="btn-add" onclick="addArrayItem('sizes')">Add Size</button>
+                                <div class="help-text">e.g., S, M, L, XL</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Available Colors</label>
+                                <div id="colors-container" class="array-input">
+                                    <!-- Colors will be populated by JavaScript -->
+                                </div>
+                                <button type="button" class="btn-add" onclick="addArrayItem('colors')">Add
+                                    Color</button>
+                                <div class="help-text">e.g., Red, Blue, Green</div>
+                            </div>
+                        </div>
+
+                        <% if (product) { %>
+                            <div class="form-group">
+                                <label for="isActive">Status</label>
+                                <select id="isActive" name="isActive" class="form-control">
+                                    <option value="true" <%=formData.isActive !==false && formData.is_active !==false
+                                        ? 'selected' : '' %>>Active</option>
+                                    <option value="false" <%=formData.isActive===false || formData.is_active===false
+                                        ? 'selected' : '' %>>Inactive</option>
+                                </select>
+                            </div>
+                            <% } %>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn">
+                                        <%= product ? 'Update Product' : 'Create Product' %>
+                                    </button>
+                                    <a href="/admin/products" class="btn btn-secondary">Cancel</a>
+                                </div>
+                    </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize arrays from form data
+        const formData = <%- JSON.stringify(formData) %>;
+
+        // Parse existing sizes and colors
+        let sizes = [];
+        let colors = [];
+
+        try {
+            if (formData.sizes) {
+                sizes = typeof formData.sizes === 'string' ? JSON.parse(formData.sizes) : formData.sizes;
+            }
+        } catch (e) {
+            sizes = [];
+        }
+
+        try {
+            if (formData.colors) {
+                colors = typeof formData.colors === 'string' ? JSON.parse(formData.colors) : formData.colors;
+            }
+        } catch (e) {
+            colors = [];
+        }
+
+        function addArrayItem(type, value = '') {
+            const container = document.getElementById(`${type}-container`);
+            const div = document.createElement('div');
+            div.className = 'array-item';
+            div.innerHTML = `
+                <input type="text" name="${type}[]" value="${value}" placeholder="Enter ${type.slice(0, -1)}">
+                <button type="button" class="btn-remove" onclick="removeArrayItem(this)">×</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeArrayItem(button) {
+            button.parentElement.remove();
+        }
+
+        // Initialize existing items
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add existing sizes
+            sizes.forEach(size => addArrayItem('sizes', size));
+
+            // Add existing colors
+            colors.forEach(color => addArrayItem('colors', color));
+
+            // Add empty items if none exist
+            if (sizes.length === 0) addArrayItem('sizes');
+            if (colors.length === 0) addArrayItem('colors');
+        });
+
+        // Form submission handler to convert arrays to JSON
+        document.querySelector('form').addEventListener('submit', function (e) {
+            // Convert size inputs to JSON
+            const sizeInputs = document.querySelectorAll('input[name="sizes[]"]');
+            const sizesArray = Array.from(sizeInputs).map(input => input.value).filter(val => val.trim());
+
+            // Convert color inputs to JSON
+            const colorInputs = document.querySelectorAll('input[name="colors[]"]');
+            const colorsArray = Array.from(colorInputs).map(input => input.value).filter(val => val.trim());
+
+            // Remove existing array inputs
+            sizeInputs.forEach(input => input.remove());
+            colorInputs.forEach(input => input.remove());
+
+            // Add hidden JSON inputs
+            const sizesInput = document.createElement('input');
+            sizesInput.type = 'hidden';
+            sizesInput.name = 'sizes';
+            sizesInput.value = JSON.stringify(sizesArray);
+            this.appendChild(sizesInput);
+
+            const colorsInput = document.createElement('input');
+            colorsInput.type = 'hidden';
+            colorsInput.name = 'colors';
+            colorsInput.value = JSON.stringify(colorsArray);
+            this.appendChild(colorsInput);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,52 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop - ATC AfriGlam</title>
-    <link rel="stylesheet" href="styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%- include('./partials/head.ejs') %>
+    <style>
+        .shop-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .shop-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .shop-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+        .product-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        .product-image-placeholder {
+            width: 100%;
+            height: 250px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .product-info {
+            padding: 1.5rem;
+        }
+        .product-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .product-category {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .product-stock {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .stock-good { color: #28a745; }
+        .stock-low { color: #ffc107; }
+        .stock-out { color: #dc3545; }
+        .view-details-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .view-details-btn:hover {
+            background: #5a67d8;
+            color: white;
+            text-decoration: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        .no-products {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+    </style>
 </head>
-
 <body>
     <%- include('./partials/nav.ejs') %>
 
-    <!-- Shop Section -->
-    <section class="shop">
-        <div class="container">
-            <h1 class="section-title">Shop Our Collection</h1>
-            <div class="products-grid" id="products-grid">
-                <!-- Products will be dynamically inserted here -->
-            </div>
-            <div id="no-products-message" style="display: none;">
-                <p>No products available. Please check back later.</p>
-            </div>
+    <div class="shop-container">
+        <div class="shop-header">
+            <h1>Shop Our Collection</h1>
+            <p>Discover authentic African fashion and accessories</p>
         </div>
-    </section>
 
-    <!-- Newsletter Section -->
-    <section class="newsletter">
-        <div class="container">
-            <h2 class="section-title">Stay Connected</h2>
-            <p class="newsletter-subtitle">Subscribe to our newsletter for exclusive updates, promotions, and fashion
-                tips!</p>
-            <form class="newsletter-form">
-                <input type="email" placeholder="Your email address" required>
-                <button type="submit" class="cta-button">Subscribe</button>
-            </form>
-            <p class="newsletter-disclaimer">*We respect your privacy. Unsubscribe at any time.</p>
+        <!-- Products Grid -->
+        <div class="products-grid" id="products-grid">
+            <div class="loading">Loading products...</div>
         </div>
-    </section>
+    </div>
 
-    <!-- Footer -->
     <%- include('./partials/footer.ejs') %>
 
-    <script src="script.js"></script>
+    <script>
+        // Load and display products
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products?limit=12');
+                const data = await response.json();
 
+                if (data.success && data.products) {
+                    displayProducts(data.products);
+                } else {
+                    document.getElementById('products-grid').innerHTML = 
+                        '<div class="no-products"><h3>No products found</h3></div>';
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('products-grid').innerHTML = 
+                    '<div class="no-products"><h3>Failed to load products</h3></div>';
+            }
+        }
+
+        // Display products
+        function displayProducts(products) {
+            const grid = document.getElementById('products-grid');
+            
+            if (products.length === 0) {
+                grid.innerHTML = '<div class="no-products"><h3>No products found</h3></div>';
+                return;
+            }
+
+            grid.innerHTML = products.map(product => `
+                <a href="/product/${product.id}" class="product-card">
+                    ${product.image_url 
+                        ? `<img src="${product.image_url}" alt="${product.name}" class="product-image">`
+                        : `<div class="product-image-placeholder">No Image</div>`
+                    }
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-category">${product.category_name || 'Uncategorized'}</div>
+                        <div class="product-price">₵${parseFloat(product.price).toFixed(2)}</div>
+                        
+                        <div class="product-stock">
+                            ${product.stock_quantity > 10 
+                                ? `<span class="stock-good">In Stock</span>`
+                                : product.stock_quantity > 0
+                                ? `<span class="stock-low">Low Stock</span>`
+                                : `<span class="stock-out">Out of Stock</span>`
+                            }
+                        </div>
+                        
+                        <div class="view-details-btn">View Details</div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+        });
+    </script>
 </body>
-
 </html>

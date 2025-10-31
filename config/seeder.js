@@ -100,7 +100,7 @@ class DatabaseSeeder {
           category_id: categories['Traditional Dresses'],
           stock_quantity: 10,
           sku: 'RKD001',
-          image_url: '/images/products/kente-dress-1.jpg',
+          image_url: 'https://placehold.co/400x400/8B4513/FFFFFF?text=Kente+Dress',
           sizes: JSON.stringify(['S', 'M', 'L', 'XL']),
           colors: JSON.stringify(['Gold/Black', 'Red/Gold', 'Blue/Gold'])
         },
@@ -111,7 +111,7 @@ class DatabaseSeeder {
           category_id: categories['Dashiki'],
           stock_quantity: 25,
           sku: 'CDS001',
-          image_url: '/images/products/dashiki-1.jpg',
+          image_url: 'https://placehold.co/400x400/FF6B35/FFFFFF?text=Dashiki+Shirt',
           sizes: JSON.stringify(['S', 'M', 'L', 'XL', 'XXL']),
           colors: JSON.stringify(['Blue', 'Red', 'Green', 'Yellow'])
         }

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order History - AfriGlam</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1>Order History</h1>
+            <nav class="breadcrumb">
+                <a href="/">Home</a> > 
+                <a href="/dashboard">Dashboard</a> > 
+                <span>Order History</span>
+            </nav>
+        </header>
+
+        <main class="order-history">
+            <% if (orders && orders.length > 0) { %>
+                <div class="orders-grid">
+                    <% orders.forEach(order => { %>
+                        <div class="order-card" data-order-id="<%= order.id %>">
+                            <div class="order-header">
+                                <div class="order-number">
+                                    <strong>Order #<%= order.order_number %></strong>
+                                </div>
+                                <div class="order-status status-<%= order.status %>">
+                                    <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                </div>
+                            </div>
+
+                            <div class="order-details">
+                                <div class="order-info">
+                                    <p><strong>Date:</strong> <%= new Date(order.created_at).toLocaleDateString() %></p>
+                                    <p><strong>Items:</strong> <%= order.item_count %> item(s)</p>
+                                    <p><strong>Total:</strong> $<%= parseFloat(order.total_amount).toFixed(2) %></p>
+                                </div>
+
+                                <div class="order-actions">
+                                    <a href="/orders/<%= order.id %>" class="btn btn-primary">View Details</a>
+                                    <% if (order.status === 'pending' || order.status === 'confirmed') { %>
+                                        <button class="btn btn-secondary cancel-order" data-order-id="<%= order.id %>">
+                                            Cancel Order
+                                        </button>
+                                    <% } %>
+                                    <% if (order.status === 'delivered') { %>
+                                        <button class="btn btn-outline reorder" data-order-id="<%= order.id %>">
+                                            Reorder
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <% if (order.status === 'shipped' && order.tracking_number) { %>
+                                <div class="tracking-info">
+                                    <p><strong>Tracking:</strong> <%= order.tracking_number %></p>
+                                    <a href="#" class="track-order" data-tracking="<%= order.tracking_number %>">
+                                        Track Package
+                                    </a>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% }); %>
+                </div>
+
+                <!-- Pagination -->
+                <% if (pagination && pagination.pages > 1) { %>
+                    <div class="pagination">
+                        <% if (pagination.page > 1) { %>
+                            <a href="?page=<%= pagination.page - 1 %>" class="btn btn-outline">Previous</a>
+                        <% } %>
+                        
+                        <% for (let i = 1; i <= pagination.pages; i++) { %>
+                            <% if (i === pagination.page) { %>
+                                <span class="btn btn-primary current"><%= i %></span>
+                            <% } else { %>
+                                <a href="?page=<%= i %>" class="btn btn-outline"><%= i %></a>
+                            <% } %>
+                        <% } %>
+                        
+                        <% if (pagination.page < pagination.pages) { %>
+                            <a href="?page=<%= pagination.page + 1 %>" class="btn btn-outline">Next</a>
+                        <% } %>
+                    </div>
+                <% } %>
+            <% } else { %>
+                <div class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h2>No Orders Yet</h2>
+                    <p>You haven't placed any orders yet. Start shopping to see your order history here.</p>
+                    <a href="/products" class="btn btn-primary">Start Shopping</a>
+                </div>
+            <% } %>
+        </main>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cancel Order</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this order?</p>
+                <textarea id="cancelReason" placeholder="Reason for cancellation (optional)" rows="3"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelModalClose">Cancel</button>
+                <button class="btn btn-danger" id="confirmCancel">Confirm Cancellation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cancel order functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const cancelButtons = document.querySelectorAll('.cancel-order');
+            const modal = document.getElementById('cancelModal');
+            const closeModal = document.querySelectorAll('.close, #cancelModalClose');
+            const confirmCancel = document.getElementById('confirmCancel');
+            let currentOrderId = null;
+
+            cancelButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    currentOrderId = this.dataset.orderId;
+                    modal.style.display = 'block';
+                });
+            });
+
+            closeModal.forEach(element => {
+                element.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    currentOrderId = null;
+                    document.getElementById('cancelReason').value = '';
+                });
+            });
+
+            confirmCancel.addEventListener('click', async function() {
+                if (!currentOrderId) return;
+
+                const reason = document.getElementById('cancelReason').value;
+                
+                try {
+                    const response = await fetch(`/api/orders/${currentOrderId}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ reason })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to cancel order: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('Error cancelling order: ' + error.message);
+                }
+            });
+
+            // Reorder functionality
+            document.querySelectorAll('.reorder').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const orderId = this.dataset.orderId;
+                    
+                    try {
+                        const response = await fetch(`/api/orders/${orderId}/reorder`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            window.location.href = '/cart';
+                        } else {
+                            alert('Failed to reorder: ' + result.error);
+                        }
+                    } catch (error) {
+                        alert('Error reordering: ' + error.message);
+                    }
+                });
+            });
+
+            // Track order functionality
+            document.querySelectorAll('.track-order').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const trackingNumber = this.dataset.tracking;
+                    // Open tracking in new window - this would integrate with actual shipping provider
+                    window.open(`https://tracking.example.com/${trackingNumber}`, '_blank');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

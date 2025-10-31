@@ -25,6 +25,9 @@
             <% } %>
 
             <form method="POST" action="/login">
+                <% if (typeof redirectUrl !== 'undefined' && redirectUrl) { %>
+                    <input type="hidden" name="redirectUrl" value="<%= redirectUrl %>">
+                <% } %>
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input 
