@@ -2,6 +2,8 @@ tests
 
 .env
 node_modules
+.kiro/specs
+
 
 jest.config.js
 
