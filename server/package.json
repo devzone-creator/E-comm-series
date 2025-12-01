@@ -1,0 +1,62 @@
+{
+  "name": "musti-ecommerce-main",
+  "version": "1.0.0",
+  "description": "An e-commerce app for Traditional African wear",
+  "license": "ISC",
+  "author": "TechRelief-Gh",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "NODE_ENV=test vitest run",
+    "test:watch": "vitest watch",
+    "test:simple": "node tests/simple-test.js",
+    "test:auth": "node tests/auth-test.js",
+    "test:products": "node tests/product-test.js",
+    "test:cart": "node tests/cart-test.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "client:install": "cd client && npm install",
+    "client:start": "cd client && npm run dev || npm run start",
+    "client:build": "cd client && npm run build",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:init": "node config/init-db.js",
+    "db:seed": "node -e \"import('./config/seeder.js').then(m => new m.default().runAllSeeders())\"",
+    "seed:products": "node scripts/seedProducts.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.0",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^7.0.9",
+    "nodemon": "^3.1.10",
+    "pg": "^8.11.3"
+  },
+  "optionalDependencies": {
+    "node-fetch": "^3.4.0"
+  },
+  "stripe": "^11.0.0",
+  "optionalDependencies": {
+    "node-fetch": "^3.4.0"
+  },
+  "devDependencies": {
+    "chai": "^6.2.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "sinon": "^21.0.0",
+    "supertest": "^6.3.3",
+    "vitest": "^4.0.5"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": []
+}

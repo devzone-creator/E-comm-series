@@ -1,0 +1,1 @@
+codacy-cli analyze --rootPath /home/user/E-comm-series --file routes/checkout.js --tool trivy
