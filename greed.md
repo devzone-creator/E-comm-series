@@ -226,3 +226,139 @@ But if you want my strongest possible advice:
 Reply “SHORT MVP” or “FULL BEAST” and I’ll give you the exact day-by-day plan for whichever you choose.
 
 Choose wisely — your bank account and reputation are on the line.
+
+# FINAL & COMPLETE MVP FEATURE LIST  
+(E-Commerce Website – December 2025 Delivery – This is EVERYTHING you will build and deliver. Nothing more until the client pays the remaining balance.)
+
+### PUBLIC / CUSTOMER SIDE (What the customer sees)
+
+1. **Homepage**  
+   - Store logo + name  
+   - Hero banner / slider (max 3 images)  
+   - Featured / All Products grid (image + name + price + “Add to Cart” button)  
+   - Simple category filter or links at the top (if client has categories)  
+   - Search bar (works on product name)  
+   - Responsive mobile design (must look perfect on phone)
+
+2. **Category Page** (optional – can be same as homepage)  
+   - Show products filtered by category  
+   - “All Products” link
+
+3. **Product Detail Page**  
+   - Main product image + thumbnail gallery (2–5 images)  
+   - Product title, short & long description  
+   - Price (supports sale price / old price strikethrough if needed)  
+   - Stock status (“In stock” or “Out of stock”)  
+   - Quantity selector (+ / – buttons)  
+   - Big “Add to Cart” button (disabled if out of stock)  
+   - Related products (4–6 similar items at the bottom – optional but nice)
+
+4. **Shopping Cart Page** (/cart)  
+   - List all items (image, name, quantity, price, subtotal)  
+   - Update quantity (with + / –)  
+   - Remove item  
+   - Cart totals (subtotal → shipping → total)  
+   - “Continue Shopping” and “Proceed to Checkout” buttons  
+   - Cart persists even if page is refreshed (localStorage or backend)
+
+5. **Checkout Page** (/checkout)  
+   - Billing / Delivery details form:  
+     • Full name  
+     • Phone number (mandatory – very important in Africa)  
+     • Email (optional)  
+     • Delivery address (street, city, state, country)  
+     • Optional: Order notes  
+   - Order summary sidebar (same as cart)  
+   - Choice of ONE payment method only (e.g., “Pay with Paystack”)  
+   - “Place Order” button → redirects to payment gateway
+
+6. **Payment Integration** (Choose and complete ONLY ONE)  
+   - Paystack (recommended – test + live keys)  
+   OR Flutterwave  
+   OR Stripe  
+   → Webhook must update order status to “Paid” automatically  
+   → Handles failed payments gracefully
+
+7. **Order Success / Thank You Page**  
+   - “Thank you! Your order has been received”  
+   - Order number  
+   - Amount paid  
+   - Customer details summary  
+   - Delivery address  
+   - Simple email receipt sent to customer (and to store owner)
+
+8. **Basic Pages**  
+   - About Us  
+   - Contact Us  
+   - Terms & Conditions / Privacy Policy (static pages – copy-paste is fine)
+
+### ADMIN / STORE OWNER SIDE (Separate /admin route with login)
+
+9. **Admin Login**  
+   - Simple email + password (one admin account is enough for MVP)
+
+10. **Admin Dashboard**  
+    - Total sales today / this month  
+    - Recent orders widget  
+    - Low stock alert (if stock < 5)
+
+11. **Manage Products**  
+    - List all products with pagination  
+    - Add new product form:  
+      → Name, slug, short & long description  
+      → Regular price & sale price  
+      → Category  
+      → Stock quantity  
+      → Upload multiple images (at least 1, max 6)  
+      → Featured / Published toggle  
+    - Edit / Delete / Duplicate product  
+    - Bulk actions (optional)
+
+12. **Manage Categories**  
+    - Add / Edit / Delete categories
+
+13. **Manage Orders**  
+    - Full orders list with filters (All / Pending / Paid / Shipped / Cancelled)  
+    - View order details (customer info + items bought)  
+    - Change order status (Pending → Paid → Processing → Shipped → Delivered)  
+    - Print invoice / packing slip (simple HTML page)  
+    - Send manual email to customer (optional)
+
+14. **Store Settings** (one simple page)  
+    - Store name, email, phone, address  
+    - Currency symbol  
+    - Shipping fee (flat rate only for MVP)  
+    - Paystack / Flutterwave / Stripe keys
+
+### TECHNICAL / NON-FUNCTIONAL (Must be done)
+
+15. **Security & Basics**  
+    - HTTPS everywhere  
+    - CSRF protection  
+    - Basic input validation & sanitization  
+    - Rate limiting on checkout (prevent spam)
+
+16. **Performance**  
+    - Images optimized & lazy-loaded  
+    - Page load < 4 seconds on 3G
+
+17. **Deployment**  
+    - Live public URL (custom domain preferred)  
+    - Database backup strategy (even daily manual export is fine for now)
+
+18. **Handover Package**  
+    - GitHub private repo link (or ZIP)  
+    - .env example file  
+    - 2-page “How to update products & view orders” PDF  
+    - Admin login credentials
+
+That is literally **EVERYTHING** you include before you collect the final payment.
+
+Once the client pays the remaining balance, you are free to add fancy extras in 2026 (user accounts, coupons, reviews, analytics, etc.).
+
+Copy this entire list, send it to your colleague right now, and use it as your single source of truth.
+
+You’re 70–80% there → the remaining 20–30% is just finishing and polishing the items above.
+
+Go ship it before 31 December 2025.  
+When you finally send the client the live link and invoice, come back and write “SHIPPED & PAID ✅” — I’ll be waiting to celebrate with you!
