@@ -47,7 +47,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 // Configure multer
-const upload = multer({
+export const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
@@ -110,12 +110,3 @@ export const deleteUploadedFile = (filePath) => {
   }
   return false;
 };
-
-// Utility function to get fileoad; default uplexport;
-};
-
-name}`iles/${frl}/upload`${baseU
-  return t')}`;et('hoseq.g/${r}:/col`${req.protoseUrl = bat onsnull;
-  c) return lename{
-  if (!fiame) =>  filen = (req,rl getFileUrt const URL
-expo

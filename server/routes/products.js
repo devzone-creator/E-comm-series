@@ -1,19 +1,11 @@
 import express from 'express';
 import prisma from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
 import cloudinary from '../config/cloudinary.js';
 import fs from 'fs';
 
 const router = express.Router();
-
-// Middleware to check admin role
-const isAdmin = (req, res, next) => {
-  if (req.user?.role !== 'ADMIN') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
 
 // GET all products
 router.get('/', async (req, res) => {
@@ -39,14 +31,14 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST create product (Admin only)
-router.post('/', authenticate, isAdmin, upload.single('image'), async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, stockQuantity } = req.body;
     let imageUrl = null;
 
     if (req.file) {
       try {
-        const result = await cloudinary.uploader.upload(req.file.path, { 
+        const result = await cloudinary.uploader.upload(req.file.path, {
           folder: 'musti-ecommerce',
           resource_type: 'auto'
         });
@@ -79,7 +71,7 @@ router.post('/', authenticate, isAdmin, upload.single('image'), async (req, res)
 });
 
 // PUT update product (Admin only)
-router.put('/:id', authenticate, isAdmin, upload.single('image'), async (req, res) => {
+router.put('/:id', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, stockQuantity } = req.body;
     const updateData = { name, description, price: parseFloat(price), stockQuantity: stockQuantity ? parseInt(stockQuantity) : null };
@@ -109,7 +101,7 @@ router.put('/:id', authenticate, isAdmin, upload.single('image'), async (req, re
 });
 
 // DELETE product (Admin only)
-router.delete('/:id', authenticate, isAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     await prisma.product.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Product deleted successfully' });

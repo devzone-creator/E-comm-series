@@ -1,18 +1,10 @@
 import express from 'express';
 import prisma from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Middleware to check admin role
-const isAdmin = (req, res, next) => {
-  if (req.user?.role !== 'ADMIN') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
-
-router.get('/stats', authenticate, isAdmin, async (req, res) => {
+router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const totalProducts = await prisma.product.count();
     const totalOrders = await prisma.order.count();
@@ -30,7 +22,7 @@ router.get('/stats', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-router.get('/orders', authenticate, isAdmin, async (req, res) => {
+router.get('/orders', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       include: { user: true, orderItems: { include: { product: true } } },
@@ -42,7 +34,7 @@ router.get('/orders', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-router.put('/orders/:id/status', authenticate, isAdmin, async (req, res) => {
+router.put('/orders/:id/status', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     const order = await prisma.order.update({

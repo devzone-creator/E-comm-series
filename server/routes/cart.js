@@ -1,10 +1,10 @@
 import express from 'express';
 import prisma from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/:userId/items', authenticate, async (req, res) => {
+router.get('/:userId/items', authenticateToken, async (req, res) => {
   try {
     const cartItems = await prisma.cartItem.findMany({
       where: { userId: parseInt(req.params.userId) },
@@ -16,7 +16,7 @@ router.get('/:userId/items', authenticate, async (req, res) => {
   }
 });
 
-router.post('/:userId/items', authenticate, async (req, res) => {
+router.post('/:userId/items', authenticateToken, async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     const userId = parseInt(req.params.userId);
@@ -45,7 +45,7 @@ router.post('/:userId/items', authenticate, async (req, res) => {
   }
 });
 
-router.put('/:userId/items/:productId', authenticate, async (req, res) => {
+router.put('/:userId/items/:productId', authenticateToken, async (req, res) => {
   try {
     const { quantity } = req.body;
     const cartItem = await prisma.cartItem.update({
@@ -64,7 +64,7 @@ router.put('/:userId/items/:productId', authenticate, async (req, res) => {
   }
 });
 
-router.delete('/:userId/items/:productId', authenticate, async (req, res) => {
+router.delete('/:userId/items/:productId', authenticateToken, async (req, res) => {
   try {
     await prisma.cartItem.delete({
       where: {
@@ -80,7 +80,7 @@ router.delete('/:userId/items/:productId', authenticate, async (req, res) => {
   }
 });
 
-router.delete('/:userId/clear', authenticate, async (req, res) => {
+router.delete('/:userId/clear', authenticateToken, async (req, res) => {
   try {
     await prisma.cartItem.deleteMany({ where: { userId: parseInt(req.params.userId) } });
     res.json({ message: 'Cart cleared' });

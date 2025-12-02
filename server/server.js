@@ -7,9 +7,7 @@ import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import checkoutRoutes from './routes/checkout.js';
-import orderRoutes from './routes/orders.js';
 import adminRoutes from './routes/admin.js';
-import inventoryRoutes from './routes/inventory.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
 import { securityHeaders, sanitizeInput, generalLimiter, authLimiter } from './middleware/security.js';
 
@@ -48,15 +46,11 @@ app.use(session({
 }));
 
 // Routes
-import webhooksRoutes from './routes/webhooks.js';
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/checkout', checkoutRoutes);
-app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/webhooks', webhooksRoutes);
 
 // Favicon route
 app.get('/favicon.ico', (req, res) => {

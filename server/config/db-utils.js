@@ -1,125 +1,131 @@
-import { pool, withRetry } from './database.js';
+import prisma from './database.js';
+
+function escapeParam(value) {
+  if (value === null || value === undefined) return 'NULL';
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+  if (value instanceof Date) return `'${value.toISOString().replace(/'/g, "''")}'`;
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function buildSQL(text, params = []) {
+  let sql = text;
+  params.forEach((p, i) => {
+    const placeholder = `$${i + 1}`;
+    sql = sql.split(placeholder).join(escapeParam(p));
+  });
+  return sql;
+}
+
+async function withRetry(fn, retries = 2, delay = 200) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) await new Promise(r => setTimeout(r, delay * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
 
 class DatabaseUtils {
-  // Generic query method with error handling and retry logic
   static async query(text, params = []) {
     return withRetry(async () => {
-      let client;
       try {
-        client = await pool.connect();
-        const result = await client.query(text, params);
-        return result;
+        const sql = buildSQL(text, params);
+        const result = await prisma.$queryRawUnsafe(sql);
+        return { rows: Array.isArray(result) ? result : [] };
       } catch (error) {
-        console.error('Database query error:', error.message);
+        console.error('Database query error:', error?.message || error);
         throw error;
-      } finally {
-        if (client) {
-          client.release();
-        }
       }
     });
   }
 
-  // Get single record
   static async findOne(table, conditions = {}, columns = '*') {
-    const whereClause = Object.keys(conditions).length > 0
-      ? 'WHERE ' + Object.keys(conditions).map((key, index) => `${key} = $${index + 1}`).join(' AND ')
+    const whereKeys = Object.keys(conditions);
+    const whereClause = whereKeys.length > 0
+      ? 'WHERE ' + whereKeys.map((k, i) => `${k} = $${i + 1}`).join(' AND ')
       : '';
-
-    const query = `SELECT ${columns} FROM ${table} ${whereClause} LIMIT 1`;
+    const sql = `SELECT ${columns} FROM ${table} ${whereClause} LIMIT 1`;
     const values = Object.values(conditions);
-
-    const result = await this.query(query, values);
+    const result = await this.query(sql, values);
     return result.rows[0] || null;
   }
 
-  // Get multiple records
   static async findMany(table, conditions = {}, options = {}) {
     const { columns = '*', orderBy = '', limit = '', offset = '' } = options;
-
-    const whereClause = Object.keys(conditions).length > 0
-      ? 'WHERE ' + Object.keys(conditions).map((key, index) => `${key} = $${index + 1}`).join(' AND ')
+    const whereKeys = Object.keys(conditions);
+    const whereClause = whereKeys.length > 0
+      ? 'WHERE ' + whereKeys.map((k, i) => `${k} = $${i + 1}`).join(' AND ')
       : '';
-
     const orderClause = orderBy ? `ORDER BY ${orderBy}` : '';
     const limitClause = limit ? `LIMIT ${limit}` : '';
     const offsetClause = offset ? `OFFSET ${offset}` : '';
-
-    const query = `SELECT ${columns} FROM ${table} ${whereClause} ${orderClause} ${limitClause} ${offsetClause}`;
+    const sql = `SELECT ${columns} FROM ${table} ${whereClause} ${orderClause} ${limitClause} ${offsetClause}`;
     const values = Object.values(conditions);
-
-    const result = await this.query(query, values);
+    const result = await this.query(sql, values);
     return result.rows;
   }
 
-  // Insert record
   static async insert(table, data) {
     const columns = Object.keys(data).join(', ');
-    const placeholders = Object.keys(data).map((_, index) => `$${index + 1}`).join(', ');
+    const placeholders = Object.keys(data).map((_, i) => `$${i + 1}`).join(', ');
+    const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING *`;
     const values = Object.values(data);
-
-    const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING *`;
-
-    const result = await this.query(query, values);
-    return result.rows[0];
+    const result = await this.query(sql, values);
+    return result.rows[0] || null;
   }
 
-  // Update record
   static async update(table, data, conditions) {
-    const setClause = Object.keys(data).map((key, index) => `${key} = $${index + 1}`).join(', ');
-    const whereClause = Object.keys(conditions).map((key, index) => `${key} = $${index + Object.keys(data).length + 1}`).join(' AND ');
-
-    const query = `UPDATE ${table} SET ${setClause} WHERE ${whereClause} RETURNING *`;
+    const setKeys = Object.keys(data);
+    const whereKeys = Object.keys(conditions);
+    const setClause = setKeys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const whereClause = whereKeys.map((k, i) => `${k} = $${i + setKeys.length + 1}`).join(' AND ');
+    const sql = `UPDATE ${table} SET ${setClause} WHERE ${whereClause} RETURNING *`;
     const values = [...Object.values(data), ...Object.values(conditions)];
-
-    const result = await this.query(query, values);
-    return result.rows[0];
+    const result = await this.query(sql, values);
+    return result.rows[0] || null;
   }
 
-  // Delete record
   static async delete(table, conditions) {
-    const whereClause = Object.keys(conditions).map((key, index) => `${key} = $${index + 1}`).join(' AND ');
-    const query = `DELETE FROM ${table} WHERE ${whereClause} RETURNING *`;
+    const whereKeys = Object.keys(conditions);
+    const whereClause = whereKeys.map((k, i) => `${k} = $${i + 1}`).join(' AND ');
+    const sql = `DELETE FROM ${table} WHERE ${whereClause} RETURNING *`;
     const values = Object.values(conditions);
-
-    const result = await this.query(query, values);
-    return result.rows[0];
+    const result = await this.query(sql, values);
+    return result.rows[0] || null;
   }
 
-  // Count records
   static async count(table, conditions = {}) {
-    const whereClause = Object.keys(conditions).length > 0
-      ? 'WHERE ' + Object.keys(conditions).map((key, index) => `${key} = $${index + 1}`).join(' AND ')
+    const whereKeys = Object.keys(conditions);
+    const whereClause = whereKeys.length > 0
+      ? 'WHERE ' + whereKeys.map((k, i) => `${k} = $${i + 1}`).join(' AND ')
       : '';
-
-    const query = `SELECT COUNT(*) as count FROM ${table} ${whereClause}`;
+    const sql = `SELECT COUNT(*)::int AS count FROM ${table} ${whereClause}`;
     const values = Object.values(conditions);
-
-    const result = await this.query(query, values);
-    return parseInt(result.rows[0].count);
+    const result = await this.query(sql, values);
+    return (result.rows[0] && result.rows[0].count) ? parseInt(result.rows[0].count, 10) : 0;
   }
 
-  // Check if record exists
   static async exists(table, conditions) {
     const count = await this.count(table, conditions);
     return count > 0;
   }
 
-  // Transaction wrapper
   static async transaction(callback) {
-    const client = await pool.connect();
-
-    try {
-      await client.query('BEGIN');
-      const result = await callback(client);
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return prisma.$transaction(async (tx) => {
+      const client = {
+        query: async (text, params = []) => {
+          const sql = buildSQL(text, params);
+          const res = await tx.$queryRawUnsafe(sql);
+          return { rows: Array.isArray(res) ? res : [] };
+        }
+      };
+      return callback(client);
+    });
   }
 }
 

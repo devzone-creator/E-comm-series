@@ -1,10 +1,10 @@
 import express from 'express';
 import prisma from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/orders', authenticate, async (req, res) => {
+router.post('/orders', authenticateToken, async (req, res) => {
   try {
     const { userId, customerName, customerEmail, customerPhone, shippingAddress, paymentMethod, cartItems } = req.body;
 
@@ -40,7 +40,7 @@ router.post('/orders', authenticate, async (req, res) => {
   }
 });
 
-router.get('/:userId/orders', authenticate, async (req, res) => {
+router.get('/:userId/orders', authenticateToken, async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { userId: parseInt(req.params.userId) },
@@ -53,7 +53,7 @@ router.get('/:userId/orders', authenticate, async (req, res) => {
   }
 });
 
-router.get('/orders/:orderId', authenticate, async (req, res) => {
+router.get('/orders/:orderId', authenticateToken, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
       where: { id: parseInt(req.params.orderId) },
