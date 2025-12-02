@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Musti Ecommerce</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">Musti</h1>
+            <div class="nav-links">
+                <a href="shopPage.html">Shop</a>
+                <a href="cartPage.html">Cart</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Checkout</h2>
+        <div id="cartSummary"></div>
+        <form id="checkoutForm">
+            <input type="text" id="customerName" placeholder="Full Name" required>
+            <input type="email" id="customerEmail" placeholder="Email" required>
+            <input type="tel" id="customerPhone" placeholder="Phone Number">
+            <textarea id="shippingAddress" placeholder="Shipping Address" required></textarea>
+            <select id="paymentMethod" required>
+                <option value="">Select Payment Method</option>
+                <option value="Cash on Delivery">Cash on Delivery</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+            <button type="submit" class="btn-primary">Place Order</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script type="module">
+        const API_URL = 'http://localhost:5000/api';
+        
+        // Load and display cart on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            if (cart.length === 0) {
+                document.getElementById('message').innerHTML = '<p class="error">Your cart is empty. <a href="shopPage.html">Continue shopping</a></p>';
+                document.getElementById('checkoutForm').style.display = 'none';
+            } else {
+                displayCartSummary(cart);
+            }
+        });
+        
+        function displayCartSummary(cart) {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const summaryHTML = `
+                <div class="cart-summary" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3>Order Summary</h3>
+                    ${cart.map(item => `
+                        <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                            <span>${item.productName} x ${item.quantity}</span>
+                            <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <hr>
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
+                        <span>Total:</span>
+                        <span>$${total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('cartSummary').innerHTML = summaryHTML;
+        }
+        
+        document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const user = JSON.parse(localStorage.getItem('user'));
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            
+            if (cart.length === 0) {
+                document.getElementById('message').innerHTML = '<p class="error">Your cart is empty</p>';
+                return;
+            }
+
+            const orderData = {
+                userId: user.id,
+                customerName: document.getElementById('customerName').value,
+                customerEmail: document.getElementById('customerEmail').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                shippingAddress: document.getElementById('shippingAddress').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                cartItems: cart
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/checkout/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (response.ok) {
+                    const order = await response.json();
+                    localStorage.removeItem('cart');
+                    document.getElementById('message').innerHTML = `<p class="success">Order #${order.id} placed successfully! Total: $${order.totalAmount.toFixed(2)}</p>`;
+                    document.getElementById('checkoutForm').style.display = 'none';
+                    setTimeout(() => window.location.href = 'shopPage.html', 3000);
+                } else {
+                    const error = await response.json();
+                    document.getElementById('message').innerHTML = `<p class="error">${error.error}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = '<p class="error">Failed to place order. Please try again.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - ATC AfriGlam</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo-wrapper">
+                <a href="musti.html" class="logo">ATC AfriGlam</a>
+            </div>
+            <nav class="main-nav">
+                <a href="musti.html" class="nav-link">Home</a>
+                <a href="aboutPage.html" class="nav-link">About Us</a>
+                <a href="shopPage.html" class="nav-link">Shop</a>
+                <a href="admin.html" id="adminLink" class="nav-link" style="display:none;">Admin</a>
+                <a href="#" id="logoutBtn" class="nav-link">Logout</a>
+            </nav>
+            <div class="cart-icon-wrapper">
+                <a href="cartPage.html" class="cart-icon-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="cart-icon">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l1.5-7H6.5L5 3H1M7 13l-1 5a2 2 0 002 2h10a2 2 0 002-2l-1-5M7 13h10" />
+                    </svg>
+                    <span id="cartCount" class="cart-count">0</span>
+                </a>
+            </div>
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars menu-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <section class="shop">
+        <div class="container">
+            <h1 class="section-title">Shop Our Collection</h1>
+            <div id="productsGrid" class="products-grid"></div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>ATC AfriGlam</h3>
+                    <p>Celebrating African heritage through contemporary fashion.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ATC AfriGlam. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/products.js"></script>
+</body>
+</html>
