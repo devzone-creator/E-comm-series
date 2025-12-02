@@ -1,107 +1,71 @@
 import express from 'express';
-import checkoutService from '../services/checkoutService.js';
-import cartService from '../services/cartService.js';
-import { authenticateSession } from '../middleware/auth.js';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET || '', { apiVersion: '2022-11-15' });
+import prisma from '../config/database.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Checkout page
-router.get('/', authenticateSession, async (req, res) => {
+router.post('/orders', authenticate, async (req, res) => {
   try {
-    const cartResult = await cartService.getCartItems(req.session.userId);
-    const { items } = cartResult;
+    const { userId, customerName, customerEmail, customerPhone, shippingAddress, paymentMethod, cartItems } = req.body;
 
-    if (!items || items.length === 0) {
-      return res.redirect('/cart?error=empty');
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
     }
 
-    const totals = await checkoutService.calculateOrderTotals(req.session.userId);
+    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    res.render('checkout/index', {
-      title: 'Checkout - AfriGlam',
-      cartItems: items,
-      totals,
-      user: { id: req.session.userId }
+    const order = await prisma.order.create({
+      data: {
+        userId: parseInt(userId),
+        totalAmount,
+        customerName,
+        customerEmail,
+        customerPhone,
+        shippingAddress,
+        paymentMethod,
+        orderItems: {
+          create: cartItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        }
+      },
+      include: { orderItems: { include: { product: true } } }
     });
+
+    res.status(201).json(order);
   } catch (error) {
-    console.error('Checkout page error:', error);
-    res.redirect('/cart?error=checkout_failed');
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Process checkout
-router.post('/process', authenticateSession, async (req, res) => {
+router.get('/:userId/orders', authenticate, async (req, res) => {
   try {
-    const { shipping, payment } = req.body;
-
-    // Validate shipping address
-    checkoutService.validateShippingAddress(shipping);
-
-    // Validate payment method
-    if (!payment || !payment.method) {
-      throw new Error('Payment method is required');
-    }
-
-    // Create order record (status: pending)
-    const orderData = { shipping, payment };
-    const order = await checkoutService.createOrder(req.session.userId, orderData);
-
-    // Only Stripe is supported for payments in this release
-    if (payment.method !== 'stripe') {
-      throw new Error('Unsupported payment method');
-    }
-
-    // Prepare Stripe Checkout Session
-    if (!process.env.STRIPE_SECRET) {
-      throw new Error('STRIPE_SECRET is not configured');
-    }
-
-    // Build line items from cart
-    const cartResult = await cartService.getCartItems(req.session.userId);
-    const line_items = (cartResult.items || []).map(item => ({
-      price_data: {
-        currency: (process.env.CURRENCY || 'NGN').toLowerCase(),
-        product_data: { name: item.product_name || item.name || 'Item' },
-        unit_amount: Math.round((parseFloat(item.product_price || item.price || 0) || 0) * 100)
-      },
-      quantity: item.quantity || 1
-    }));
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items,
-      mode: 'payment',
-      success_url: `${process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`}/orders/${order.orderId}?success=true`,
-      cancel_url: `${process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`}/checkout?canceled=true`,
-      metadata: {
-        orderId: order.orderId,
-        orderNumber: order.orderNumber
-      }
+    const orders = await prisma.order.findMany({
+      where: { userId: parseInt(req.params.userId) },
+      include: { orderItems: { include: { product: true } } },
+      orderBy: { createdAt: 'desc' }
     });
-
-    // Detect SPA/API requests
-    const isApiRequest = req.headers['accept']?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
-
-    if (isApiRequest) {
-      return res.json({ url: session.url });
-    }
-
-    return res.redirect(303, session.url);
+    res.json(orders);
   } catch (error) {
-    console.error('Checkout process error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    const isApiRequest = req.headers['accept']?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
-    if (isApiRequest) {
-      return res.status(400).json({ error: error.message || 'Unable to process order' });
+router.get('/orders/:orderId', authenticate, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: parseInt(req.params.orderId) },
+      include: { orderItems: { include: { product: true } } }
+    });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
     }
-
-    return res.redirect(`/checkout?error=${encodeURIComponent(error.message || 'Unable to process order')}`);
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
 export default router;
-
-      
