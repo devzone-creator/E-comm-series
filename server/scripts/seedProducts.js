@@ -1,4 +1,4 @@
-import { pool } from '../config/database.js';
+import prisma from '../config/database.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -97,68 +97,38 @@ const dummyProducts = [
 ];
 
 async function seedProducts() {
-  const client = await pool.connect();
-  
   try {
     console.log('🌱 Starting to seed products...');
     
-    // First, create categories if they don't exist
-    const categories = [...new Set(dummyProducts.map(p => p.category))];
-    
-    for (const categoryName of categories) {
-      await client.query(`
-        INSERT INTO categories (name, description, is_active, created_at, updated_at)
-        VALUES ($1, $2, true, NOW(), NOW())
-        ON CONFLICT (name) DO NOTHING
-      `, [categoryName, `${categoryName} category`]);
-    }
-    
-    console.log(`✅ Created ${categories.length} categories`);
-    
-    // Get category IDs
-    const categoryResult = await client.query('SELECT id, name FROM categories');
-    const categoryMap = {};
-    categoryResult.rows.forEach(cat => {
-      categoryMap[cat.name] = cat.id;
-    });
-    
-    // Insert products
-    let insertedCount = 0;
+    let createdCount = 0;
     
     for (const product of dummyProducts) {
       try {
-        await client.query(`
-          INSERT INTO products (
-            name, description, price, category_id, stock_quantity, 
-            image_url, is_active, created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-        `, [
-          product.name,
-          product.description,
-          product.price,
-          categoryMap[product.category],
-          product.stock_quantity,
-          product.image_url,
-          product.is_active
-        ]);
-        insertedCount++;
-      } catch (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          console.log(`⚠️  Product "${product.name}" already exists, skipping...`);
-        } else {
-          throw error;
-        }
+        await prisma.product.upsert({
+          where: { name: product.name },
+          update: {},
+          create: {
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            stockQuantity: product.stock_quantity,
+            imageUrl: product.image_url
+          }
+        });
+        createdCount++;
+      } catch (err) {
+        console.warn(`⚠️ Error creating product "${product.name}":`, err.message);
       }
     }
     
-    console.log(`✅ Successfully inserted ${insertedCount} products`);
+    console.log(`✅ Successfully seeded ${createdCount} products`);
     console.log('🎉 Product seeding completed!');
     
   } catch (error) {
     console.error('❌ Error seeding products:', error);
     throw error;
   } finally {
-    client.release();
+    await prisma.$disconnect();
   }
 }
 

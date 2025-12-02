@@ -2,7 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import session from 'express-session';
-import { testConnection } from './config/database.js';
+import prisma from './config/database.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 
 // Test database connection on startup
 if (process.env.NODE_ENV !== 'test') {
-    testConnection();
+    prisma.$connect().catch(err => console.error('Database connection failed:', err));
 }
 
 // Security middleware
@@ -48,16 +48,15 @@ app.use(session({
 }));
 
 // Routes
-app.use('/api/auth', authLimiter); // Rate limit auth endpoints
-app.use('/', authRoutes);
-app.use('/', productRoutes);
-app.use('/', cartRoutes);
-app.use('/checkout', checkoutRoutes);
-app.use('/orders', orderRoutes);
-app.use('/', adminRoutes);
-app.use('/api', inventoryRoutes);
 import webhooksRoutes from './routes/webhooks.js';
-app.use('/webhooks', webhooksRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/webhooks', webhooksRoutes);
 
 // Favicon route
 app.get('/favicon.ico', (req, res) => {
@@ -66,16 +65,12 @@ app.get('/favicon.ico', (req, res) => {
 
 // Health check route
 app.get('/health', async (req, res) => {
-    // During tests we skip database connectivity checks to avoid requiring a running DB
     if (process.env.NODE_ENV === 'test') {
         return res.json({ status: 'healthy', database: 'skipped-for-test', timestamp: new Date().toISOString() });
     }
 
     try {
-        const { pool } = await import('./config/database.js');
-        const client = await pool.connect();
-        await client.query('SELECT 1');
-        client.release();
+        await prisma.$queryRaw`SELECT 1`;
         res.json({ status: 'healthy', database: 'connected', timestamp: new Date().toISOString() });
     } catch (error) {
         res.status(503).json({ status: 'unhealthy', database: 'disconnected', error: error.message, timestamp: new Date().toISOString() });
